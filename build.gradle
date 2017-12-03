@@ -30,7 +30,7 @@ artifacts {
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 group 'se.fnord'
-version '1.0-SNAPSHOT'
+version '0.1-SNAPSHOT'
 
 ext {
     jackson = '2.9.2'
@@ -38,9 +38,12 @@ ext {
     disruptor = '3.3.7'
 
     junit5 = '5.0.2'
-    jsonUnit ='1.25.1'
+    jsonUnit = '1.25.1'
     isTravis = System.getenv('TRAVIS') ? true : false
-    isRelease = !isTravis && (System.getenv('RELEASE') ? true : false)
+    isRelease = !isTravis && !version.endsWith("SNAPSHOT")
+
+    ossrhUsername = System.getenv('OSSRH_USERNAME')
+    ossrhPassword = System.getenv('OSSRH_PASSWORD')
 }
 
 
@@ -97,4 +100,48 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     gradleVersion = '4.3.1'
+}
+
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+            pom.project {
+                name project.name
+                packaging 'jar'
+                description 'Logstash json event layout for Log4J2'
+                url 'https://github.com/gsson/log4j2-logstash-layout'
+
+                scm {
+                    url 'scm:git:https://github.com/gsson/log4j2-logstash-layout'
+                    connection 'scm:git:git@github.com:/gsson/log4j2-logstash-layout'
+                    developerConnection 'scm:git:git@github.com:/gsson/log4j2-logstash-layout'
+                }
+
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'gsson'
+                        name 'Henrik Gustafsson'
+                    }
+                }
+            }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+        }
+    }
 }

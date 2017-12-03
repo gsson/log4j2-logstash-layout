@@ -18,13 +18,18 @@ plugins {
     id 'com.github.spotbugs' version '1.6.0'
 }
 
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allJava
 }
 
 artifacts {
-    archives sourcesJar
+    archives javadocJar, sourcesJar
 }
 
 apply plugin: 'org.junit.platform.gradle.plugin'

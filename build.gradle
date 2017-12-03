@@ -27,10 +27,6 @@ artifacts {
     archives sourcesJar
 }
 
-signing {
-    sign configurations.archives
-}
-
 apply plugin: 'org.junit.platform.gradle.plugin'
 
 group 'se.fnord'
@@ -43,6 +39,8 @@ ext {
 
     junit5 = '5.0.2'
     jsonUnit ='1.25.1'
+    isTravis = System.getenv('TRAVIS') ? true : false
+    isRelease = !isTravis && (System.getenv('RELEASE') ? true : false)
 }
 
 
@@ -66,6 +64,11 @@ compileJava {
 
 compileTestJava {
     options.compilerArgs << "-Xlint:all,-classfile,-processing" << "-Werror"
+}
+
+signing {
+    required { isRelease && gradle.taskGraph.hasTask(":uploadArchives") }
+    sign configurations.archives
 }
 
 spotbugs {

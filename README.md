@@ -1,5 +1,7 @@
 # Logstash json event layout for Log4J2
 
+[![Build Status](https://travis-ci.org/gsson/log4j2-logstash-layout.svg)](https://travis-ci.org/gsson/log4j2-logstash-layout)
+
 The goal is to be reasonably performant and (near) garbage-free.
 
 The layout lacks many options, but the defaults should produce sane messages conforming to the Logback [LoggingEvent fields](https://github.com/logstash/logstash-logback-encoder#loggingevent-fields). Each message is separated by a newline. 

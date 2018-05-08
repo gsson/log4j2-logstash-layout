@@ -40,7 +40,6 @@ version '0.2-SNAPSHOT'
 ext {
     jackson = '2.9.2'
     log4j = '2.10.0'
-    disruptor = '3.3.7'
 
     junit5 = '5.0.2'
     jsonUnit = '1.25.1'

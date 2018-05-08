@@ -89,6 +89,7 @@ junitPlatform {
 dependencies {
     compile "org.apache.logging.log4j:log4j-core:${log4j}"
     compile "org.apache.logging.log4j:log4j-api:${log4j}"
+    compile "se.fnord:log4j2-tagged-message:0.1-SNAPSHOT"
 
     testCompileOnly "org.apiguardian:apiguardian-api:1.0.0"
 

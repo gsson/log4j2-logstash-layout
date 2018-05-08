@@ -11,6 +11,8 @@ import org.apache.logging.log4j.message.ObjectMessage;
 import org.apache.logging.log4j.message.SimpleMessage;
 import org.apache.logging.log4j.util.SortedArrayStringMap;
 import org.junit.jupiter.api.Test;
+import se.fnord.taggedmessage.TaggedMessage;
+import se.fnord.taggedmessage.Tags;
 
 import java.io.*;
 import java.util.Collections;
@@ -233,6 +235,34 @@ public class LogstashLayoutV1Test {
                 .node("level").isEqualTo("DEBUG")
                 .node("level_value").isEqualTo(7)
                 .node("message").isEqualTo(TextNode.valueOf("[message]"));
+
+        assertEquals(s, toByteArray(layout, event));
+        assertEquals(s, encode(layout, event));
+    }
+
+
+    @Test
+    public void rendersTaggedMessage() {
+        LogstashLayoutV1 layout = LogstashLayoutV1.newBuilder()
+                .setHost("host-name")
+                .build();
+
+        Log4jLogEvent event = Log4jLogEvent.newBuilder()
+                .setTimeMillis(1)
+                .setLevel(Level.DEBUG)
+                .setMessage(new TaggedMessage(Tags.of( "message", "message"), null))
+                .build();
+
+        String s = layout.toSerializable(event);
+        assertTrue(s.endsWith("\n"));
+
+        assertThatJson(s)
+                .node("@version").isEqualTo(1)
+                .node("@timestamp").isEqualTo("1970-01-01T00:00:00.001Z")
+                .node("source_host").isEqualTo("host-name")
+                .node("level").isEqualTo("DEBUG")
+                .node("level_value").isEqualTo(7)
+                .node("message").isEqualTo("message");
 
         assertEquals(s, toByteArray(layout, event));
         assertEquals(s, encode(layout, event));

@@ -15,10 +15,12 @@ import org.apache.logging.log4j.core.pattern.DatePatternConverter;
 import org.apache.logging.log4j.core.util.JsonUtils;
 import org.apache.logging.log4j.core.util.NetUtils;
 import org.apache.logging.log4j.core.util.StringBuilderWriter;
+import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.util.StringBuilderFormattable;
 import org.apache.logging.log4j.util.StringBuilders;
 import org.apache.logging.log4j.util.Strings;
+import se.fnord.taggedmessage.TaggedMessage;
 
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
@@ -32,7 +34,8 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
     private static final char C = ',';
     private static final char Q = '\"';
     private static final String QC = "\",";
-    private static final String QU = "\"_";
+    private static final String CQ = ",\"";
+    private static final String CQU = ",\"_";
 
     private static final int DEFAULT_STRING_BUILDER_SIZE = 1024;
 
@@ -217,19 +220,18 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
                 .append(event.getLevel().name())
                 .append(QC);
         jsonBuilder.append("\"level_value\":");
-        appendLevelValue(event.getLevel(), jsonBuilder)
-                .append(C);
+        appendLevelValue(event.getLevel(), jsonBuilder);
 
         if (event.getThreadName() != null) {
-            jsonBuilder.append("\"thread_name\":\"");
+            jsonBuilder.append(",\"thread_name\":\"");
             JsonUtils.quoteAsString(event.getThreadName(), jsonBuilder);
-            jsonBuilder.append(QC);
+            jsonBuilder.append(Q);
         }
 
         if (event.getLoggerName() != null) {
-            jsonBuilder.append("\"logger_name\":\"");
+            jsonBuilder.append(",\"logger_name\":\"");
             JsonUtils.quoteAsString(event.getLoggerName(), jsonBuilder);
-            jsonBuilder.append(QC);
+            jsonBuilder.append(Q);
         }
 
         if (includeThreadContext) {
@@ -238,14 +240,20 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         }
 
         if (includeStacktrace && event.getThrown() != null) {
-            jsonBuilder.append("\"stack_trace\":\"");
+            jsonBuilder.append(",\"stack_trace\":\"");
             appendThrowable(event.getThrown(), textBuilder, jsonBuilder);
-            jsonBuilder.append(QC);
+            jsonBuilder.append(Q);
         }
 
-        jsonBuilder.append("\"message\":\"");
-        appendMessage(event.getMessage(), textBuilder, jsonBuilder);
-        jsonBuilder.append(Q);
+        Message message = event.getMessage();
+        if (message instanceof TaggedMessage) {
+            ((TaggedMessage) message).getTags().forEach(jsonBuilder, LogstashLayoutV1::appendTaggedValue);
+        }
+        else {
+            jsonBuilder.append(",\"message\":\"");
+            appendMessage(message, textBuilder, jsonBuilder);
+            jsonBuilder.append(Q);
+        }
         jsonBuilder.append('}');
         jsonBuilder.append('\n');
     }
@@ -279,11 +287,19 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
     }
 
     static void appendKeyValue(String key, Object value, StringBuilder stringBuilder) {
-        stringBuilder.append(QU);
+        stringBuilder.append(CQU);
         JsonUtils.quoteAsString(key, stringBuilder);
         stringBuilder.append("\":\"");
         JsonUtils.quoteAsString(toNullSafeString(String.valueOf(value)), stringBuilder);
-        stringBuilder.append(QC);
+        stringBuilder.append(Q);
+    }
+
+    static void appendTaggedValue(String key, Object value, StringBuilder stringBuilder) {
+        stringBuilder.append(CQ);
+        JsonUtils.quoteAsString(key, stringBuilder);
+        stringBuilder.append("\":\"");
+        JsonUtils.quoteAsString(toNullSafeString(String.valueOf(value)), stringBuilder);
+        stringBuilder.append(Q);
     }
 
     static StringBuilder appendTimestamp(long timeMillis, StringBuilder stringBuilder) {

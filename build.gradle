@@ -30,7 +30,7 @@ artifacts {
 }
 
 group 'se.fnord'
-version '0.4-SNAPSHOT'
+version '0.4'
 
 ext {
     jackson = '2.9.7'

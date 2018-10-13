@@ -240,7 +240,6 @@ public class LogstashLayoutV1Test {
         assertEquals(s, encode(layout, event));
     }
 
-
     @Test
     public void rendersTaggedMessage() {
         LogstashLayoutV1 layout = LogstashLayoutV1.newBuilder()
@@ -250,7 +249,10 @@ public class LogstashLayoutV1Test {
         Log4jLogEvent event = Log4jLogEvent.newBuilder()
                 .setTimeMillis(1)
                 .setLevel(Level.DEBUG)
-                .setMessage(new TaggedMessage(Tags.of( "message", "message"), null))
+                .setMessage(new TaggedMessage(Tags.of(
+                        "message", "message",
+                        "number", 42,
+                        "boolean", true), null))
                 .build();
 
         String s = layout.toSerializable(event);
@@ -262,7 +264,9 @@ public class LogstashLayoutV1Test {
                 .node("source_host").isEqualTo("host-name")
                 .node("level").isEqualTo("DEBUG")
                 .node("level_value").isEqualTo(7)
-                .node("message").isEqualTo("message");
+                .node("message").isEqualTo("message")
+                .node("number").isEqualTo(42)
+                .node("boolean").isEqualTo(true);
 
         assertEquals(s, toByteArray(layout, event));
         assertEquals(s, encode(layout, event));

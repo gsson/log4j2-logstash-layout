@@ -9,17 +9,19 @@ import org.apache.logging.log4j.core.config.Node;
 import org.apache.logging.log4j.core.config.plugins.Plugin;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderAttribute;
 import org.apache.logging.log4j.core.config.plugins.PluginBuilderFactory;
-import org.apache.logging.log4j.core.layout.*;
+import org.apache.logging.log4j.core.layout.AbstractLayout;
+import org.apache.logging.log4j.core.layout.ByteBufferDestination;
+import org.apache.logging.log4j.core.layout.StringBuilderEncoder;
 import org.apache.logging.log4j.core.net.Severity;
 import org.apache.logging.log4j.core.pattern.DatePatternConverter;
 import org.apache.logging.log4j.core.util.JsonUtils;
 import org.apache.logging.log4j.core.util.NetUtils;
 import org.apache.logging.log4j.core.util.StringBuilderWriter;
-import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.util.StringBuilderFormattable;
 import org.apache.logging.log4j.util.StringBuilders;
 import org.apache.logging.log4j.util.Strings;
+import se.fnord.taggedmessage.TagConsumer;
 import se.fnord.taggedmessage.TaggedMessage;
 
 import java.io.PrintWriter;
@@ -30,7 +32,7 @@ import java.util.Map;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Plugin(name = "LogstashLayoutV1", category = Node.CATEGORY, elementType = Layout.ELEMENT_TYPE)
-public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLayout {
+public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLayout, TagConsumer<StringBuilder> {
     private static final char C = ',';
     private static final char Q = '\"';
     private static final String QC = "\",";
@@ -247,7 +249,7 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
 
         Message message = event.getMessage();
         if (message instanceof TaggedMessage) {
-            ((TaggedMessage) message).getTags().forEach(jsonBuilder, LogstashLayoutV1::appendTaggedValue);
+            ((TaggedMessage) message).getTags().forEach(jsonBuilder, this);
         }
         else {
             jsonBuilder.append(",\"message\":\"");
@@ -286,7 +288,7 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         }
     }
 
-    static void appendKeyValue(String key, Object value, StringBuilder stringBuilder) {
+    static void appendKeyValue(CharSequence key, Object value, StringBuilder stringBuilder) {
         stringBuilder.append(CQU);
         JsonUtils.quoteAsString(key, stringBuilder);
         stringBuilder.append("\":\"");
@@ -294,12 +296,40 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         stringBuilder.append(Q);
     }
 
-    static void appendTaggedValue(String key, Object value, StringBuilder stringBuilder) {
+    static void appendTaggedTextValue(CharSequence key, Object value, StringBuilder stringBuilder) {
         stringBuilder.append(CQ);
         JsonUtils.quoteAsString(key, stringBuilder);
-        stringBuilder.append("\":\"");
+        stringBuilder.append("\":");
+        stringBuilder.append(Q);
         JsonUtils.quoteAsString(toNullSafeString(String.valueOf(value)), stringBuilder);
         stringBuilder.append(Q);
+    }
+
+    static void appendTaggedLongValue(CharSequence key, long value, StringBuilder stringBuilder) {
+        stringBuilder.append(CQ);
+        JsonUtils.quoteAsString(key, stringBuilder);
+        stringBuilder.append("\":");
+        stringBuilder.append(value);
+    }
+
+    static void appendTaggedDoubleValue(CharSequence key, double value, StringBuilder stringBuilder) {
+        stringBuilder.append(CQ);
+        JsonUtils.quoteAsString(key, stringBuilder);
+        stringBuilder.append("\":");
+        stringBuilder.append(value);
+    }
+
+    static void appendTaggedBooleanValue(CharSequence key, boolean value, StringBuilder stringBuilder) {
+        stringBuilder.append(CQ);
+        JsonUtils.quoteAsString(key, stringBuilder);
+        stringBuilder.append("\":");
+        stringBuilder.append(value);
+    }
+
+    static void appendTaggedNullValue(CharSequence key, StringBuilder stringBuilder) {
+        stringBuilder.append(CQ);
+        JsonUtils.quoteAsString(key, stringBuilder);
+        stringBuilder.append("\":null");
     }
 
     static StringBuilder appendTimestamp(long timeMillis, StringBuilder stringBuilder) {
@@ -320,5 +350,30 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
         JsonUtils.quoteAsString(textBuilder, jsonBuilder);
+    }
+
+    @Override
+    public void textTag(CharSequence key, CharSequence value, StringBuilder stringBuilder) {
+        LogstashLayoutV1.appendTaggedTextValue(key, value, stringBuilder);
+    }
+
+    @Override
+    public void longTag(CharSequence key, long value, StringBuilder stringBuilder) {
+        LogstashLayoutV1.appendTaggedLongValue(key, value, stringBuilder);
+    }
+
+    @Override
+    public void booleanTag(CharSequence key, boolean value, StringBuilder stringBuilder) {
+        LogstashLayoutV1.appendTaggedBooleanValue(key, value, stringBuilder);
+    }
+
+    @Override
+    public void doubleTag(CharSequence key, double value, StringBuilder stringBuilder) {
+        LogstashLayoutV1.appendTaggedDoubleValue(key, value, stringBuilder);
+    }
+
+    @Override
+    public void nullTag(CharSequence key, StringBuilder stringBuilder) {
+        LogstashLayoutV1.appendTaggedNullValue(key, stringBuilder);
     }
 }

@@ -36,7 +36,7 @@ ext {
     jackson = '2.9.5'
     log4j = '2.11.0'
 
-    jsonUnit = '1.29.0'
+    jsonUnit = '1.31.1'
     junit5 = '5.3.1'
     isTravis = System.getenv('TRAVIS') ? true : false
     isRelease = !isTravis && !version.endsWith("SNAPSHOT")

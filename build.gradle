@@ -15,6 +15,10 @@ plugins {
     id 'com.github.spotbugs' version '1.6.4'
 }
 
+test {
+    useJUnitPlatform()
+}
+
 task javadocJar(type: Jar) {
     classifier = 'javadoc'
     from javadoc
@@ -82,6 +86,7 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit5}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${junit5}"
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junit5}")
 
     testImplementation "com.fasterxml.jackson.core:jackson-core:${jackson}"
     testImplementation "com.fasterxml.jackson.core:jackson-databind:${jackson}"

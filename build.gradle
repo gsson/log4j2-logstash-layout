@@ -37,11 +37,11 @@ group 'se.fnord'
 version '0.5-SNAPSHOT'
 
 ext {
-    jackson = '2.9.7'
+    jackson = '2.9.9'
     log4j = '2.11.1'
 
-    jsonUnit = '1.31.1'
-    junit5 = '5.3.1'
+    jsonUnit = '2.7.0'
+    junit5 = '5.5.0'
     isTravis = System.getenv('TRAVIS') ? true : false
     isRelease = !isTravis && !version.endsWith("SNAPSHOT")
 

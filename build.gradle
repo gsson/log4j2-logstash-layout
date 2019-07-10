@@ -58,9 +58,19 @@ repositories {
     mavenCentral()
 }
 
-configurations.all {
-    resolutionStrategy {
-        failOnVersionConflict()
+configurations {
+    all {
+        resolutionStrategy {
+            failOnVersionConflict()
+            // json-unit -> json-unit-core and junit-jupiter-api depend on different versions
+            force 'org.opentest4j:opentest4j:1.2.0'
+        }
+    }
+    spotbugs {
+        resolutionStrategy {
+            // Internal Slf4j version confusion in Spotbugs
+            force 'org.slf4j:slf4j-api:1.8.0-beta4'
+        }
     }
 }
 

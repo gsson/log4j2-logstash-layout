@@ -180,7 +180,8 @@ public class LogstashLayoutV1Test {
                 .node("level").isEqualTo("DEBUG")
                 .node("level_value").isEqualTo(7)
                 .node("message").isEqualTo("message")
-                .node("stack_trace").isEqualTo(TextNode.valueOf(stackTrace));
+                .node("stack_trace").isEqualTo(TextNode.valueOf(stackTrace))
+                .node("_key").isAbsent();
 
         assertEquals(s, toByteArray(layout, LOG_EVENT));
         assertEquals(s, encode(layout, LOG_EVENT));

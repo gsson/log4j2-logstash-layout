@@ -55,6 +55,7 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
 
     private final boolean includeStacktrace;
     private final boolean includeThreadContext;
+    private final boolean includeTimestamp;
     private final String objectHeader;
     private final StringBuilderEncoder encoder;
 
@@ -70,6 +71,9 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         @PluginBuilderAttribute
         private boolean includeThreadContext = true;
 
+        @PluginBuilderAttribute
+        private boolean includeTimestamp = true;
+
         public Builder() {
             super();
         }
@@ -78,7 +82,7 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
         public LogstashLayoutV1 build() {
             return new LogstashLayoutV1(getConfiguration(),
                     host != null ? host : NetUtils.getLocalHostname(),
-                    includeStacktrace, includeThreadContext);
+                    includeStacktrace, includeThreadContext, includeTimestamp);
         }
 
         public String getHost() {
@@ -91,6 +95,10 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
 
         public boolean isIncludeThreadContext() {
             return includeThreadContext;
+        }
+
+        public boolean isIncludeTimestamp() {
+            return includeTimestamp;
         }
 
         public B setHost(String host) {
@@ -107,13 +115,19 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
             this.includeThreadContext = includeThreadContext;
             return asBuilder();
         }
+
+        public B setIncludeTimestamp(boolean includeTimestamp) {
+            this.includeTimestamp = includeTimestamp;
+            return asBuilder();
+        }
     }
 
-    private LogstashLayoutV1(Configuration config, String host, boolean includeStacktrace, boolean includeThreadContext) {
+    private LogstashLayoutV1(Configuration config, String host, boolean includeStacktrace, boolean includeThreadContext, boolean includeTimestamp) {
         super(config, null, null);
         this.objectHeader = renderObjectHeader(1, host);
         this.includeStacktrace = includeStacktrace;
         this.includeThreadContext = includeThreadContext;
+        this.includeTimestamp = includeTimestamp;
         this.encoder = new StringBuilderEncoder(UTF_8);
     }
 
@@ -215,9 +229,11 @@ public class LogstashLayoutV1 extends AbstractLayout<String> implements StringLa
     private void toText(LogEvent event, StringBuilder textBuilder, StringBuilder jsonBuilder) {
         jsonBuilder.append('{');
         jsonBuilder.append(objectHeader);
-        jsonBuilder.append("\"@timestamp\":\"");
-        appendTimestamp(event.getTimeMillis(), jsonBuilder)
-                .append(QC);
+        if (includeTimestamp) {
+            jsonBuilder.append("\"@timestamp\":\"");
+            appendTimestamp(event.getTimeMillis(), jsonBuilder)
+                    .append(QC);
+        }
         jsonBuilder.append("\"level\":\"")
                 .append(event.getLevel().name())
                 .append(QC);

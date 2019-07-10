@@ -23,3 +23,4 @@ Supported parameters are:
 * `host`: The hostname, appears in the `source_host` field. Optional, defaults to the local hostname.
 * `includeStacktrace`: Enable logging of stacktraces of logged exceptions. Optional, defaults to `true`.
 * `includeThreadContext`: Enable logging of the thread context. Optional, defaults to `true`.
+* `includeTimestamp`: Enable logging of the `@timestamp` field. Optional, defaults to `true`.

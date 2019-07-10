@@ -188,6 +188,33 @@ public class LogstashLayoutV1Test {
     }
 
     @Test
+    public void rendersCharSequenceMessageOmittingTimestamp() {
+        LogstashLayoutV1 layout = LogstashLayoutV1.newBuilder()
+                .setHost("host-name")
+                .setIncludeTimestamp(false)
+                .build();
+        String stackTrace = printStackTrace(LOG_EVENT.getThrown());
+
+        String s = layout.toSerializable(LOG_EVENT);
+        assertTrue(s.endsWith("\n"));
+
+        assertThatJson(s)
+                .node("@version").isEqualTo(1)
+                .node("@timestamp").isAbsent()
+                .node("logger_name").isEqualTo("logger-name")
+                .node("thread_name").isEqualTo("thread-name")
+                .node("source_host").isEqualTo("host-name")
+                .node("level").isEqualTo("DEBUG")
+                .node("level_value").isEqualTo(7)
+                .node("message").isEqualTo("message")
+                .node("stack_trace").isEqualTo(TextNode.valueOf(stackTrace))
+                .node("_key").isEqualTo("value");
+
+        assertEquals(s, toByteArray(layout, LOG_EVENT));
+        assertEquals(s, encode(layout, LOG_EVENT));
+    }
+
+    @Test
     public void renderStringBuilderFormattable() {
         LogstashLayoutV1 layout = LogstashLayoutV1.newBuilder()
                 .setHost("host-name")

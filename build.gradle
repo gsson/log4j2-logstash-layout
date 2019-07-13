@@ -11,8 +11,12 @@ plugins {
     id 'maven'
     id 'signing'
 
-    id 'com.github.ben-manes.versions' version '0.20.0'
-    id 'com.github.spotbugs' version '1.6.4'
+    id 'com.github.ben-manes.versions' version '0.21.0'
+    id 'com.github.spotbugs' version '2.0.0'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 task javadocJar(type: Jar) {
@@ -33,11 +37,11 @@ group 'se.fnord'
 version '0.5-SNAPSHOT'
 
 ext {
-    jackson = '2.9.7'
-    log4j = '2.11.1'
+    jackson = '2.9.9'
+    log4j = '2.11.2'
 
-    jsonUnit = '1.31.1'
-    junit5 = '5.3.1'
+    jsonUnit = '2.7.0'
+    junit5 = '5.5.0'
     isTravis = System.getenv('TRAVIS') ? true : false
     isRelease = !isTravis && !version.endsWith("SNAPSHOT")
 
@@ -54,9 +58,19 @@ repositories {
     mavenCentral()
 }
 
-configurations.all {
-    resolutionStrategy {
-        failOnVersionConflict()
+configurations {
+    all {
+        resolutionStrategy {
+            failOnVersionConflict()
+            // json-unit -> json-unit-core and junit-jupiter-api depend on different versions
+            force 'org.opentest4j:opentest4j:1.2.0'
+        }
+    }
+    spotbugs {
+        resolutionStrategy {
+            // Internal Slf4j version confusion in Spotbugs
+            force 'org.slf4j:slf4j-api:1.8.0-beta4'
+        }
     }
 }
 
@@ -78,10 +92,11 @@ dependencies {
     annotationProcessor "org.apache.logging.log4j:log4j-core:${log4j}"
     testAnnotationProcessor "org.apache.logging.log4j:log4j-core:${log4j}"
     implementation "org.apache.logging.log4j:log4j-api:${log4j}"
-    implementation "se.fnord:log4j2-tagged-message:0.2"
+    implementation "se.fnord:log4j2-tagged-message:0.3"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${junit5}"
     testImplementation "org.junit.jupiter:junit-jupiter-params:${junit5}"
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junit5}")
 
     testImplementation "com.fasterxml.jackson.core:jackson-core:${jackson}"
     testImplementation "com.fasterxml.jackson.core:jackson-databind:${jackson}"
@@ -90,7 +105,7 @@ dependencies {
 }
 
 wrapper {
-    gradleVersion = '4.10.2'
+    gradleVersion = '5.5'
 }
 
 uploadArchives {

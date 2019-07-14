@@ -83,6 +83,7 @@ compileTestJava {
 }
 
 signing {
+    useGpgCmd()
     required { isRelease && gradle.taskGraph.hasTask(":uploadArchives") }
     sign configurations.archives
 }
